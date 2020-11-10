@@ -1,4 +1,5 @@
 #include <iostream>
+#include "SyntacticAnalyzer.h"
 #include "LexicalAnalyzer.h"
 
 int main()
@@ -9,20 +10,22 @@ int main()
         return -1;
 
     LexicalAnalyzer lexicalAnalyzer(file, stdout);
-    do
-    {
-        if(lexicalAnalyzer.getSym() == -1)
-        {
-            std::cout << "Error!" << std::endl;
-            break;
-        }
-        else if(lexicalAnalyzer.isStop())
-            break;
-        else
-        {
-            std::cout << "token: " << lexicalAnalyzer.getStrToken() << std::endl;
-            std::cout << "SYM: " << lexicalAnalyzer.SYM << ", ID: " << lexicalAnalyzer.ID << ", NUM:" << lexicalAnalyzer.NUM << std::endl;
-        }
-    }while (true);
+//    do
+//    {
+//        if(lexicalAnalyzer.getSym() == -1)
+//        {
+//            std::cout << "Error!" << std::endl;
+//            break;
+//        }
+//        else if(lexicalAnalyzer.isStop())
+//            break;
+//        else
+//        {
+//            std::cout << "token: " << lexicalAnalyzer.getStrToken() << std::endl;
+//            std::cout << "SYM: " << lexicalAnalyzer.SYM << ", ID: " << lexicalAnalyzer.ID << ", NUM:" << lexicalAnalyzer.NUM << std::endl;
+//        }
+//    }while (true);
+    // test
+    SyntacticAnalyzer syntacticAnalyzer(file, stdout);
     return 0;
 }
