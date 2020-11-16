@@ -40,7 +40,7 @@ int LexicalAnalyzer::reserve()
             return i;
         }
     }
-    return 0;
+    return -1;
 }
 
 
@@ -105,7 +105,7 @@ int LexicalAnalyzer::getSym()
         }
         retract();
         code = reserve();
-        if (!code)  // Identifier
+        if (code == -1)  // Identifier
         {
             value = insertId();
             SYM = SYM_IDENTIFIER;
@@ -233,7 +233,7 @@ int LexicalAnalyzer::getSym()
         getCh();
         if(ch == '=')
         {
-            SYM = SYM_BECOMES;
+            SYM = SYM_ASSIGN;
             ID = -1;
             NUM = -1;
             return 0;

@@ -1,28 +1,6 @@
 const a=10;
-var b,c,d,t,e;
-procedure qwqwq;
-begin
-t:=e;
-end;
+var b,c;
 procedure p;
-const x=233;
-var qwq;
-procedure tat;
-read(b,cd,a);
 begin
-  d:=a;
-  b:=1;
-  c:=1;
-  e:=10000;
-  if d >= 0 then
-    begin
-      d := d-1;
-      t := c;
-      c := b+c;
-      b := t;
-    end;
-  write(c)
+  c:=b+a
 end;
-begin
-call p;
-end

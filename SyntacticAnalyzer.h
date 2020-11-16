@@ -7,15 +7,15 @@
 
 #include "LexicalAnalyzer.h"
 
-class SyntacticAnalyzer: LexicalAnalyzer
+class SyntacticAnalyzer: public LexicalAnalyzer
 {
 protected:
 //    enum fct {LIT,  LOD, STO, CAL, INT, JMP, JPC, OPR};
-    const int MAX_LEVEL = 3;
-    const int MAX_ENTRIES = 1000;
-    const int MAX_CODE = 1000;
-    const int CODE_LENGTH = 3;
-    int pc;
+    static const int MAX_LEVEL = 3;
+    static const int MAX_ENTRIES = 1000;
+    static const int MAX_CODE = 1000;
+    static const int MAX_OP = 10;
+    static const int NUM_LINK_DATA = 3;  // 3 units are needed to indicate the link data(dynamic or stationary)
     struct TableEntry
     {
         char name[MAX_LENGTH]{};
@@ -33,32 +33,35 @@ protected:
         OP_LEQ = 6, OP_LES = 7, OP_EQU = 8, OP_NEQ = 9, OP_GTR = 10, OP_GEQ = 11,
         OP_WRITE = 15, OP_READ = 16
     };
+    enum OP{LIT, LOD, STO, CAL, INT, JMP, JPC, OPR, UNDEFINED};
+    const char *OPTable[MAX_OP] = {"LIT", "LOD", "STO", "CAL", "INT", "JMP", "JPC", "OPR", "UNDEFINED"};
     struct PCode
     {
-        enum OP{LIT, LOD, STO, CAL, INT, JMP, JPC, OPR, UNDEFINED} op;
+        OP op;
         int l;
         int a;
         explicit PCode(OP _op = UNDEFINED, int _l = 0, int _a = 0):op(_op), l(_l), a(_a){}
     } *code;
 
-    int constDeclaration(int index);
-    int varDeclaration(int level, int index);
-    int procDeclaration(int level, int index);
-    int statement(int level, int index);
-    int assignStatement(int level, int index);
-    int ifStatement(int level, int index);
-    int whileStatement(int level, int index);
-    int callStatement(int level, int index);
-    int readStatement(int level, int index);
-    int writeStatement(int level, int index);
-    int compositeStatement(int level, int index);
-    int condition(int level, int index);
-    int expression(int level, int index);
-    int term(int level, int index);
-    int factor(int level, int index);
+    int constDeclaration(int tx);
+    int varDeclaration(int level, int tx);
+    int procDeclaration(int level, int tx);
+    int statement(int level, int tx);
+    int assignStatement(int level, int tx);
+    int ifStatement(int level, int tx);
+    int whileStatement(int level, int tx);
+    int callStatement(int level, int tx);
+    int readStatement(int level, int tx);
+    int writeStatement(int level, int tx);
+    int compositeStatement(int level, int tx);
+    int condition(int level, int tx);
+    int expression(int level, int tx);
+    int term(int level, int tx);
+    int factor(int level, int tx);
 
     int findInTable(const char *name, int count);
 public:
+    int pc;
     SyntacticAnalyzer(FILE *inFile, FILE *outFile) : LexicalAnalyzer(inFile, outFile)
     {
         pc = 1;
@@ -71,7 +74,8 @@ public:
         delete[] code;
     }
     int block(int lev, int tx);
-    inline void genCode(PCode::OP op, int l, int a);
+    inline void genCode(OP op, int l, int a);
+    void printCode();
 };
 
 

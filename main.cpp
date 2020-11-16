@@ -1,6 +1,7 @@
 #include <iostream>
 #include "SyntacticAnalyzer.h"
 #include "LexicalAnalyzer.h"
+using namespace std;
 
 int main()
 {
@@ -27,5 +28,6 @@ int main()
 //    }while (true);
     // test
     SyntacticAnalyzer syntacticAnalyzer(file, stdout);
+    syntacticAnalyzer.printCode();
     return 0;
 }

@@ -51,7 +51,7 @@ protected:
     bool stop;
     enum Symbol
     {
-        SYM_BEGIN, SYM_CALL, SYM_CONST, SYM_DO, SYM_END, SYM_IF, SYM_OOD, SYM_PROCEDURE, SYM_THEN, SYM_VAR,
+        SYM_BEGIN, SYM_CALL, SYM_CONST, SYM_DO, SYM_END, SYM_IF, SYM_ODD, SYM_PROCEDURE, SYM_THEN, SYM_VAR,
         SYM_WHILE, SYM_READ, SYM_WRITE,
         // ------------
         SYM_IDENTIFIER,
@@ -73,7 +73,7 @@ protected:
         SYM_COMMA,      // ,
         SYM_SEMICOLON,  // ;
         SYM_PERIOD,     // .
-        SYM_BECOMES,    // :=
+        SYM_ASSIGN,     // :=
     };
 
     void getCh();
@@ -91,8 +91,8 @@ protected:
     int insertConst();
 
 public:
-    const char *keywords[KEYWORD_NUM] = {"begin", "call", "const", "do", "end", "if", "odd", "procedure", "read",
-                                         "then", "var", "while", "write"};
+    const char *keywords[KEYWORD_NUM] = {"begin", "call", "const", "do", "end", "if", "odd", "procedure", "then", "var",
+                                         "while", "read", "write"};
     const char *operators[OPERATOR_NUM] = {"+", "-", "*", "/", "=", "#", "<", "<=", ">", ">=",
                                            "(", ")", ",", ";", ".", ":="};
 
