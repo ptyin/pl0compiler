@@ -15,10 +15,8 @@ void LexicalAnalyzer::getBC()
 {
     while (ch == ' ' || ch == '\n' || ch == '\t')
     {
-//        if (ch == '\n')
-//        {
-//            break;
-//        }
+        if (ch == '\n')
+            line++;
         getCh();
     }
 }

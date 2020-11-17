@@ -5,12 +5,12 @@ using namespace std;
 
 int main()
 {
-    std::cout << "Lexical Test!" << std::endl;
-    FILE *file;
-    if(fopen_s(&file, "../lexical.txt", "r"))
+    std::cout << "Syntax Test!" << std::endl;
+    FILE *inFile, *outFile;
+    if(fopen_s(&inFile, "../lexical.txt", "r") || fopen_s(&outFile, "../output.txt", "w"))
         return -1;
 
-    LexicalAnalyzer lexicalAnalyzer(file, stdout);
+    LexicalAnalyzer lexicalAnalyzer(inFile, stdout);
 //    do
 //    {
 //        if(lexicalAnalyzer.getSym() == -1)
@@ -27,7 +27,8 @@ int main()
 //        }
 //    }while (true);
     // test
-    SyntacticAnalyzer syntacticAnalyzer(file, stdout);
+    SyntacticAnalyzer syntacticAnalyzer(inFile, stdout);
     syntacticAnalyzer.printCode();
+    syntacticAnalyzer.parseTree.print_tree(outFile);
     return 0;
 }

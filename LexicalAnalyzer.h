@@ -25,6 +25,7 @@ protected:
     int ch;
     char strToken[MAX_LENGTH];
     const char *buffer;
+    int line;
     class VariableInfo
     {
     public:
@@ -96,8 +97,8 @@ public:
     const char *operators[OPERATOR_NUM] = {"+", "-", "*", "/", "=", "#", "<", "<=", ">", ">=",
                                            "(", ")", ",", ";", ".", ":="};
 
-    LexicalAnalyzer(FILE *inFile_, FILE *outFile_) : inFile(inFile_), outFile(outFile_), ch(-1), strToken(), buffer(nullptr),
-    SYM(-1), ID(-1), NUM(-1), variableTableIndex(0), constTableIndex(0), stop(true)
+    LexicalAnalyzer(FILE *inFile_, FILE *outFile_) : inFile(inFile_), outFile(outFile_), line(1), ch(-1), strToken(),
+    buffer(nullptr), SYM(-1), ID(-1), NUM(-1), variableTableIndex(0), constTableIndex(0), stop(true)
     {
         variableTable = new VariableInfo[MAX_VARIABLES];
         constTable = new int[MAX_CONST];

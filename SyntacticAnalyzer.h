@@ -5,6 +5,7 @@
 #ifndef COMPILER_SYNTACTICANALYZER_H
 #define COMPILER_SYNTACTICANALYZER_H
 
+#include "ParseTree.h"
 #include "LexicalAnalyzer.h"
 
 class SyntacticAnalyzer: public LexicalAnalyzer
@@ -27,11 +28,12 @@ protected:
         TableEntry()=default;
         explicit TableEntry(Type _type): type(_type){}
     } *table;
+
     enum OPERAND
     {
         OP_RET = 0, OP_PLUS = 2, OP_MINUS = 3, OP_TIMES = 4, OP_SLASH = 5,
         OP_LEQ = 6, OP_LES = 7, OP_EQU = 8, OP_NEQ = 9, OP_GTR = 10, OP_GEQ = 11,
-        OP_WRITE = 15, OP_READ = 16
+        OP_WRITE = 14, OP_LN = 15, OP_READ = 16
     };
     enum OP{LIT, LOD, STO, CAL, INT, JMP, JPC, OPR, UNDEFINED};
     const char *OPTable[MAX_OP] = {"LIT", "LOD", "STO", "CAL", "INT", "JMP", "JPC", "OPR", "UNDEFINED"};
@@ -61,6 +63,7 @@ protected:
 
     int findInTable(const char *name, int count);
 public:
+    ParseTree parseTree;
     int pc;
     SyntacticAnalyzer(FILE *inFile, FILE *outFile) : LexicalAnalyzer(inFile, outFile)
     {
@@ -74,7 +77,7 @@ public:
         delete[] code;
     }
     int block(int lev, int tx);
-    inline void genCode(OP op, int l, int a);
+    inline void gen(OP op, int l, int a);
     void printCode();
 };
 

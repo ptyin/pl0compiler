@@ -31,7 +31,7 @@ public:
         if(line != -1)
         {
             sprintf(error, "Syntax error in %d\n"
-                           "Message: %s", line, message);
+                           "Message: %s\n", line, message);
             return error;
         }
         else
