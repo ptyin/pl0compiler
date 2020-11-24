@@ -549,7 +549,7 @@ int SyntacticAnalyzer::condition(int level, int tx)
         getSym();
         expression(level, tx);
         gen(LIT, 0, 0);
-        gen(OPR, 0, OP_NEQ);
+        gen(OPR, 0, OP_EQU);
     }
     else
     {

@@ -196,6 +196,7 @@ int LexicalAnalyzer::getSym()
             ID = -1;
             NUM = -1;
         }
+        return 0;
     } else if(ch == '(')
     {
         SYM = SYM_LPAREN;
@@ -240,6 +241,9 @@ int LexicalAnalyzer::getSym()
             retract();
             return -1;
         }
+    } else
+    {
+        return -1;
     }
 }
 
