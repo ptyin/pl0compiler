@@ -1,2 +1,5 @@
 # Project exclude paths
 /cmake-build-debug/
+input.txt
+output.txt
+test.txt

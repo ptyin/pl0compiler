@@ -736,7 +736,7 @@ void interprete()
 
 int main(int argc, char *argv[])
 {
-    f = fopen("lexical.txt","r");
+    f = fopen("input.txt","r");
     getSym();
     block(0, 0);
     for (int i = 1; i<pc; i++)

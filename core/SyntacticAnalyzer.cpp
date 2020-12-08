@@ -3,7 +3,7 @@
 //
 
 #include "SyntacticAnalyzer.h"
-#include "exception/SyntaxException.h"
+#include "../exception/SyntaxException.h"
 
 /**Main part of Syntactic Analyzer
  * @param   lev     record the current level of the table;
@@ -13,7 +13,7 @@
  */
 int SyntacticAnalyzer::block(int lev, int tx)
 {
-    // --------------------------------------------
+    Procedure *current = procedures.back();
     parseTree.push("<Sub Program>");
     // --------------------------------------------
     int count = 0, dx = 0;
@@ -22,18 +22,18 @@ int SyntacticAnalyzer::block(int lev, int tx)
     if(lev > MAX_LEVEL)
         throw SyntaxException("procedure declaration exceeds max level");
     if (SYM == SYM_CONST)
-        count += constDeclaration(tx);
+        count += constDeclaration(tx, current);
     if (SYM == SYM_VAR)
-        count += dx = varDeclaration(lev, tx + count);
+        count += dx = varDeclaration(lev, tx + count, current);
     if(SYM == SYM_PROCEDURE)
     {
-        count += procDeclaration(lev, tx + count);
+        count += procDeclaration(lev, tx + count, current);
         code[tpc].a = pc;
     } else
         pc--;
 
     gen(INT, 0, NUM_LINK_DATA + dx);  // jump to statement
-    statement(lev, tx + count);
+    statement(lev, tx + count, current);
     gen(OPR, 0, OP_RET);
 
     // --------------------------------------------
@@ -52,7 +52,7 @@ inline void SyntacticAnalyzer::gen(OP op, int l, int a)
 /**Const Declaration
  * @var     tx      current table pointer
  */
-int SyntacticAnalyzer::constDeclaration(int tx)
+int SyntacticAnalyzer::constDeclaration(int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Constant Description>");
@@ -71,7 +71,7 @@ int SyntacticAnalyzer::constDeclaration(int tx)
             throw SyntaxException("identifier expected!", line);
         else
         {
-            if (findInTable(strToken, tx) != -1)  // already declared
+            if (checkInTree(strToken, current))  // already declared
                 throw SyntaxException("duplicated const identifier!", line);
             else
             {
@@ -104,6 +104,10 @@ int SyntacticAnalyzer::constDeclaration(int tx)
                 table[tx + count++] = entry;
 
                 // --------------------------------------------
+                current->entries.push_back(&table[tx + count - 1]);
+                // --------------------------------------------
+
+                // --------------------------------------------
                 parseTree.pop();
                 // --------------------------------------------
 
@@ -132,7 +136,7 @@ int SyntacticAnalyzer::constDeclaration(int tx)
  * @param   level   current level
  * @param   tx      current table pointer
  */
-int SyntacticAnalyzer::varDeclaration(int level, int tx)
+int SyntacticAnalyzer::varDeclaration(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Variable Description>");
@@ -147,7 +151,7 @@ int SyntacticAnalyzer::varDeclaration(int level, int tx)
         getSym();
         if (SYM != SYM_IDENTIFIER)
             throw SyntaxException("identifier expected", line);
-        if(findInTable(strToken, count) != -1)
+        if(checkInTree(strToken, current))
             throw SyntaxException("duplicated variable identifier", line);
 
         // --------------------------------------------
@@ -158,6 +162,11 @@ int SyntacticAnalyzer::varDeclaration(int level, int tx)
 
         strcpy_s(entry.name, strlen(strToken) + 1, strToken);
         table[tx + count++] = entry;
+
+        // --------------------------------------------
+        current->entries.push_back(&table[tx + count - 1]);
+        // --------------------------------------------
+
         entry.address++;
         getSym();
         if (SYM != SYM_COMMA && SYM != SYM_SEMICOLON)
@@ -183,7 +192,7 @@ int SyntacticAnalyzer::varDeclaration(int level, int tx)
  * @param   level   current level
  * @param   tx      current table pointer
  */
-int SyntacticAnalyzer::procDeclaration(int level, int tx)
+int SyntacticAnalyzer::procDeclaration(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Procedure Description>");
@@ -196,6 +205,8 @@ int SyntacticAnalyzer::procDeclaration(int level, int tx)
     getSym();
     if (SYM != SYM_IDENTIFIER)
         throw SyntaxException("identifier expected", line);
+    if(checkInTree(strToken, current))
+        throw SyntaxException("duplicated procedure identifier", line);
 
     // --------------------------------------------
     parseTree.push("<Identifier>");
@@ -207,6 +218,11 @@ int SyntacticAnalyzer::procDeclaration(int level, int tx)
     entry.level = level;
     entry.address = pc;
     table[tx + count++] = entry;
+
+    // --------------------------------------------
+    addChild(current, &table[tx + count - 1]);
+    // --------------------------------------------
+
     getSym();
     // procedure head
     if(SYM != SYM_SEMICOLON)
@@ -229,7 +245,7 @@ int SyntacticAnalyzer::procDeclaration(int level, int tx)
     getSym();
     // optional subsequent procedure declaration
     if (SYM == SYM_PROCEDURE)
-        count += procDeclaration(level, tx + count);
+        count += procDeclaration(level, tx + count, current);
 
     // --------------------------------------------
     parseTree.pop();
@@ -238,7 +254,7 @@ int SyntacticAnalyzer::procDeclaration(int level, int tx)
     return count;
 }
 
-int SyntacticAnalyzer::statement(int level, int tx)
+int SyntacticAnalyzer::statement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Statement>");
@@ -247,36 +263,36 @@ int SyntacticAnalyzer::statement(int level, int tx)
     if (SYM == SYM_IF)
     {
         getSym();
-        ifStatement(level, tx);
+        ifStatement(level, tx, current);
     }
     else if (SYM == SYM_WHILE)
     {
         getSym();
-        whileStatement(level, tx);
+        whileStatement(level, tx, current);
     }
     else if (SYM == SYM_CALL)
     {
         getSym();
-        callStatement(level, tx);
+        callStatement(level, tx, current);
     }
     else if (SYM == SYM_WRITE)
     {
         getSym();
-        writeStatement(level, tx);
+        writeStatement(level, tx, current);
     }
     else if (SYM == SYM_READ)
     {
         getSym();
-        readStatement(level, tx);
+        readStatement(level, tx, current);
     }
     else if (SYM == SYM_BEGIN)
     {
         getSym();
-        compositeStatement(level, tx);
+        compositeStatement(level, tx, current);
     }
     else if (SYM == SYM_IDENTIFIER)
     {
-        assignStatement(level, tx);
+        assignStatement(level, tx, current);
     }
 
     // --------------------------------------------
@@ -286,13 +302,13 @@ int SyntacticAnalyzer::statement(int level, int tx)
     return 0;
 }
 
-int SyntacticAnalyzer::ifStatement(int level, int tx)
+int SyntacticAnalyzer::ifStatement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<If Statement>");
     // --------------------------------------------
 
-    condition(level, tx);
+    condition(level, tx, current);
     int falsePC = pc;
     gen(JPC, 0, 0);
     if (SYM != SYM_THEN)
@@ -303,7 +319,7 @@ int SyntacticAnalyzer::ifStatement(int level, int tx)
     // --------------------------------------------
 
     getSym();
-    statement(level, tx);
+    statement(level, tx, current);
     code[falsePC].a = pc;  // if not true, jump to this
 
     // --------------------------------------------
@@ -313,14 +329,14 @@ int SyntacticAnalyzer::ifStatement(int level, int tx)
     return 0;
 }
 
-int SyntacticAnalyzer::whileStatement(int level, int tx)
+int SyntacticAnalyzer::whileStatement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<While Statement>");
     // --------------------------------------------
 
     int loopPC = pc;
-    condition(level, tx);
+    condition(level, tx, current);
     int conditionPC = pc;
     gen(JPC, 0, 0);
     if (SYM != SYM_DO)
@@ -331,7 +347,7 @@ int SyntacticAnalyzer::whileStatement(int level, int tx)
     // --------------------------------------------
 
     getSym();
-    statement(level, tx);
+    statement(level, tx, current);
     gen(JMP, 0, loopPC);
     code[conditionPC].a = pc;
 
@@ -342,7 +358,7 @@ int SyntacticAnalyzer::whileStatement(int level, int tx)
     return 0;
 }
 
-int SyntacticAnalyzer::callStatement(int level, int tx)
+int SyntacticAnalyzer::callStatement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Call Statement>");
@@ -350,10 +366,10 @@ int SyntacticAnalyzer::callStatement(int level, int tx)
 
     if (SYM != SYM_IDENTIFIER)
         throw SyntaxException("identifier expected", line);
-    int id = findInTable(strToken, tx);
-    if (id == -1)
+    TableEntry *id = findInTree(strToken, current);
+    if (id == nullptr)
         throw SyntaxException("identifier not found", line);
-    if (table[id].type != TableEntry::PROCEDURE)
+    if (id->type != TableEntry::PROCEDURE)
         throw SyntaxException("identifier you call is not a procedure", line);
 
     // --------------------------------------------
@@ -362,7 +378,7 @@ int SyntacticAnalyzer::callStatement(int level, int tx)
     parseTree.pop();
     // --------------------------------------------
 
-    gen(CAL, level - table[id].level, table[id].address);
+    gen(CAL, level - id->level, id->address);
     getSym();
 
     // --------------------------------------------
@@ -372,7 +388,7 @@ int SyntacticAnalyzer::callStatement(int level, int tx)
     return 0;
 }
 
-int SyntacticAnalyzer::readStatement(int level, int tx)
+int SyntacticAnalyzer::readStatement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Read Statement>");
@@ -385,15 +401,15 @@ int SyntacticAnalyzer::readStatement(int level, int tx)
     parseTree.append("(");
     // --------------------------------------------
 
-    getSym();
     while (SYM != SYM_RPAREN)
     {
+        getSym();
         if(SYM != SYM_IDENTIFIER)
             throw SyntaxException("identifier expected", line);
-        int i = findInTable(strToken, tx);
-        if(i<0)
+        TableEntry *i = findInTree(strToken, current);
+        if(i == nullptr)
             throw SyntaxException("identifier not found", line);
-        if(table[i].type != TableEntry::VARIABLE)
+        if(i->type != TableEntry::VARIABLE)
             throw SyntaxException("identifier you call is not a variable", line);
 
         // --------------------------------------------
@@ -403,7 +419,7 @@ int SyntacticAnalyzer::readStatement(int level, int tx)
         // --------------------------------------------
 
         gen(OPR, 0, OP_READ);
-        gen(STO, level - table[i].level, table[i].address + NUM_LINK_DATA);
+        gen(STO, level - i->level, i->address + NUM_LINK_DATA);
         getSym();
         if (SYM != SYM_COMMA && SYM != SYM_RPAREN)
             throw SyntaxException("syntax error", line);
@@ -428,7 +444,7 @@ int SyntacticAnalyzer::readStatement(int level, int tx)
     return 0;
 }
 
-int SyntacticAnalyzer::writeStatement(int level, int tx)
+int SyntacticAnalyzer::writeStatement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Write Statement>");
@@ -441,10 +457,10 @@ int SyntacticAnalyzer::writeStatement(int level, int tx)
     parseTree.append("(");
     // --------------------------------------------
 
-    getSym();
     while(SYM != SYM_RPAREN)
     {
-        expression(level, tx);
+        getSym();
+        expression(level, tx, current);
         gen(OPR, 0, OP_WRITE);
         gen(OPR, 0, OP_LN);
         if(SYM != SYM_COMMA && SYM != SYM_RPAREN)
@@ -470,13 +486,13 @@ int SyntacticAnalyzer::writeStatement(int level, int tx)
     return 0;
 }
 
-int SyntacticAnalyzer::compositeStatement(int level, int tx)
+int SyntacticAnalyzer::compositeStatement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Composite Statement>");
     // --------------------------------------------
 
-    statement(level, tx);
+    statement(level, tx, current);
     while (SYM == SYM_SEMICOLON)
     {
         // --------------------------------------------
@@ -484,7 +500,7 @@ int SyntacticAnalyzer::compositeStatement(int level, int tx)
         // --------------------------------------------
 
         getSym();
-        statement(level, tx);
+        statement(level, tx, current);
     }
     if (SYM != SYM_END)
         throw SyntaxException("end expected", line);
@@ -497,16 +513,16 @@ int SyntacticAnalyzer::compositeStatement(int level, int tx)
     return 0;
 }
 
-int SyntacticAnalyzer::assignStatement(int level, int tx)
+int SyntacticAnalyzer::assignStatement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Assign Statement>");
     // --------------------------------------------
 
-    int i = findInTable(strToken, tx);
-    if(i<0)
+    TableEntry *i = findInTree(strToken, current);
+    if(i == nullptr)
         throw SyntaxException("identifier not found", line);
-    if(table[i].type != TableEntry::VARIABLE)
+    if(i->type != TableEntry::VARIABLE)
         throw SyntaxException("variable expected", line);
 
     // --------------------------------------------
@@ -524,8 +540,8 @@ int SyntacticAnalyzer::assignStatement(int level, int tx)
     // --------------------------------------------
 
     getSym();
-    expression(level, tx);
-    gen(STO, level - table[i].level, NUM_LINK_DATA + table[i].address);
+    expression(level, tx, current);
+    gen(STO, level - i->level, NUM_LINK_DATA + i->address);
 
     // --------------------------------------------
     parseTree.pop();
@@ -534,7 +550,7 @@ int SyntacticAnalyzer::assignStatement(int level, int tx)
     return 0;
 }
 
-int SyntacticAnalyzer::condition(int level, int tx)
+int SyntacticAnalyzer::condition(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Condition>");
@@ -547,13 +563,12 @@ int SyntacticAnalyzer::condition(int level, int tx)
         // --------------------------------------------
 
         getSym();
-        expression(level, tx);
-        gen(LIT, 0, 0);
-        gen(OPR, 0, OP_EQU);
+        expression(level, tx, current);
+        gen(OPR, 0, OP_ODD);
     }
     else
     {
-        expression(level, tx);
+        expression(level, tx, current);
         if (SYM != SYM_NEQ && SYM != SYM_EQU && SYM != SYM_LES && SYM != SYM_LEQ && SYM != SYM_GTR && SYM != SYM_GEQ)
             throw SyntaxException("boolean operator expected", line);
 
@@ -581,7 +596,7 @@ int SyntacticAnalyzer::condition(int level, int tx)
 
         int op = SYM;
         getSym();
-        expression(level, tx);
+        expression(level, tx, current);
         switch (op)
         {
             case SYM_NEQ:
@@ -603,7 +618,7 @@ int SyntacticAnalyzer::condition(int level, int tx)
     return 0;
 }
 
-int SyntacticAnalyzer::expression(int level, int tx)
+int SyntacticAnalyzer::expression(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Expression>");
@@ -620,7 +635,7 @@ int SyntacticAnalyzer::expression(int level, int tx)
 
     if (SYM == SYM_PLUS || SYM == SYM_MINUS)
         getSym();
-    term(level, tx);
+    term(level, tx, current);
     if (op == SYM_MINUS)  // negative
     {
         gen(LIT, 0, 0);
@@ -641,7 +656,7 @@ int SyntacticAnalyzer::expression(int level, int tx)
             // --------------------------------------------
 
             getSym();
-            term(level, tx);
+            term(level, tx, current);
             if(op == SYM_PLUS)
                 gen(OPR, 0, OP_PLUS);
             else
@@ -656,13 +671,13 @@ int SyntacticAnalyzer::expression(int level, int tx)
     return 0;
 }
 
-int SyntacticAnalyzer::term(int level, int tx)
+int SyntacticAnalyzer::term(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Term>");
     // --------------------------------------------
 
-    factor(level, tx);
+    factor(level, tx, current);
     int op = SYM;
     if (op != SYM_TIMES && op != SYM_SLASH)
     {
@@ -685,7 +700,7 @@ int SyntacticAnalyzer::term(int level, int tx)
     do
     {
         getSym();
-        factor(level, tx);
+        factor(level, tx, current);
         if (op == SYM_TIMES)
             gen(OPR, 0, OP_TIMES);
         else
@@ -700,7 +715,7 @@ int SyntacticAnalyzer::term(int level, int tx)
     return 0;
 }
 
-int SyntacticAnalyzer::factor(int level, int tx)
+int SyntacticAnalyzer::factor(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<factor>");
@@ -708,13 +723,13 @@ int SyntacticAnalyzer::factor(int level, int tx)
 
     if(SYM == SYM_IDENTIFIER)
     {
-        int i = findInTable(strToken, tx);
-        if (i < 0)
+        TableEntry *i = findInTree(strToken, current);
+        if (i == nullptr)
             throw SyntaxException("Identifier not found", line);
-        if (table[i].type == TableEntry::CONSTANT)
-            gen(LIT, 0, table[i].value);
-        else if (table[i].type == TableEntry::VARIABLE)
-            gen(LOD, level - table[i].level, NUM_LINK_DATA + table[i].address);
+        if (i->type == TableEntry::CONSTANT)
+            gen(LIT, 0, i->value);
+        else if (i->type == TableEntry::VARIABLE)
+            gen(LOD, level - i->level, NUM_LINK_DATA + i->address);
         else
             throw SyntaxException("variable or constant expected", line);
 
@@ -744,7 +759,7 @@ int SyntacticAnalyzer::factor(int level, int tx)
         // --------------------------------------------
 
         getSym();
-        expression(level, tx);
+        expression(level, tx, current);
         if (SYM != SYM_RPAREN)
             throw SyntaxException("')' expected", line);
 
@@ -764,14 +779,66 @@ int SyntacticAnalyzer::factor(int level, int tx)
     return 0;
 }
 
-int SyntacticAnalyzer::findInTable(const char *name, int count)
+SyntacticAnalyzer::TableEntry *SyntacticAnalyzer::findInTable(const char *name, int count)
 {
     for(int i=0;i<count;i++)
     {
         if(strcmp(name, table[i].name) == 0)
-            return i;
+            return &table[i];
     }
-    return -1;
+    return nullptr;
+}
+
+SyntacticAnalyzer::TableEntry *SyntacticAnalyzer::findInTree(const char *name, Procedure *current, bool flag)
+{
+    if (current == nullptr)
+        return nullptr;
+
+    for (auto *id: current->entries)  // variables & constants
+    {
+        if(strcmp(name, id->name) == 0)
+            return id;
+    }
+
+    if (flag)  // first time step into findInTree
+    {
+        for (auto *procedure: current->children)  // sub procedure
+            if(strcmp(name, procedure->entry->name) == 0)
+                return procedure->entry;
+
+        if (current->father != nullptr)
+            for (auto *procedure: current->father->children)  // father's sub procedure
+            {
+                if(strcmp(name, procedure->entry->name) == 0)
+                    return procedure->entry;
+            }
+    }
+    else
+    {
+        if (current->entry != nullptr)
+            if(strcmp(name, current->entry->name) == 0)
+                return current->entry;
+    }
+
+    return findInTree(name, current->father, false);
+}
+
+// only check for the tree
+bool SyntacticAnalyzer::checkInTree(const char *name, SyntacticAnalyzer::Procedure *current)
+{
+    for (auto *id: current->entries)  // variables & constants
+    {
+        if(strcmp(name, id->name) == 0)
+            return true;
+    }
+
+    for (auto *procedure: current->children)  // procedures
+    {
+        if(strcmp(name, procedure->entry->name) == 0)
+            return true;
+    }
+
+    return false;
 }
 
 void SyntacticAnalyzer::printCode()
