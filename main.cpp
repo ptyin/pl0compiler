@@ -3,6 +3,7 @@
 #include "core/VirtualMachine.h"
 #include "core/SyntacticAnalyzer.h"
 #include "core/LexicalAnalyzer.h"
+#include "utils/graphGenerator.hpp"
 using namespace std;
 
 void lexical_test(FILE *inFile, FILE *outFile)
@@ -34,7 +35,8 @@ void syntax_test(FILE *inFile, FILE *outFile)
     // test
     SyntacticAnalyzer syntacticAnalyzer(inFile, stdout);
     syntacticAnalyzer.printCode();
-    syntacticAnalyzer.parseTree.print_tree(outFile);
+//    syntacticAnalyzer.parseTree.print_tree(outFile);
+    output(outFile, syntacticAnalyzer.parseTree);
 }
 
 void execution_test(FILE *inFile, FILE *outFile)
@@ -49,12 +51,12 @@ void execution_test(FILE *inFile, FILE *outFile)
 int main()
 {
     FILE *inFile, *outFile;
-    if(fopen_s(&inFile, "../test.txt", "r") || fopen_s(&outFile, "../output.txt", "w"))
+    if(fopen_s(&inFile, "../input.txt", "r") || fopen_s(&outFile, "../output.txt", "w"))
         return -1;
 
 //    lexical_test(inFile, outFile);
-//    syntax_test(inFile, outFile);
-    execution_test(inFile, outFile);
+    syntax_test(inFile, outFile);
+//    execution_test(inFile, outFile);
 
     return 0;
 }

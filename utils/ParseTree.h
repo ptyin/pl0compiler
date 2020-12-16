@@ -47,6 +47,9 @@ public:
     void pop();
     void append(const char* name);
     void append(int number);
+
+    Node *getRoot();
+
 private:
     void print_tree(FILE *file, Node *node, int indent, int id) const;
     static const int NUM_MAX_LENGTH = 100;

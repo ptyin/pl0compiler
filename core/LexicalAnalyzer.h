@@ -78,17 +78,11 @@ protected:
     };
 
     void getCh();
-
     void getBC();
-
     void concat();
-
     int reserve();
-
     void retract();
-
     int insertId();
-
     int insertConst();
 
 public:

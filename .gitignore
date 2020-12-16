@@ -2,4 +2,5 @@
 /cmake-build-debug/
 input.txt
 output.txt
+output.png
 test.txt

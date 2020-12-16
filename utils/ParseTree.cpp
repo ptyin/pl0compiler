@@ -54,3 +54,8 @@ void ParseTree::append(int number)
     nodes.push_back(node);
     delete[] name;
 }
+
+ParseTree::Node *ParseTree::getRoot()
+{
+    return root;
+}
