@@ -258,6 +258,7 @@ int SyntacticAnalyzer::statement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Statement>");
+
     // --------------------------------------------
 
     if (SYM == SYM_IF)
@@ -306,6 +307,7 @@ int SyntacticAnalyzer::ifStatement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<If Statement>");
+    parseTree.append("if");
     // --------------------------------------------
 
     condition(level, tx, current);
@@ -333,6 +335,7 @@ int SyntacticAnalyzer::whileStatement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<While Statement>");
+    parseTree.append("while");
     // --------------------------------------------
 
     int loopPC = pc;
@@ -362,6 +365,7 @@ int SyntacticAnalyzer::callStatement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Call Statement>");
+    parseTree.append("call");
     // --------------------------------------------
 
     if (SYM != SYM_IDENTIFIER)
@@ -392,6 +396,7 @@ int SyntacticAnalyzer::readStatement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Read Statement>");
+    parseTree.append("read");
     // --------------------------------------------
 
     if (SYM != SYM_LPAREN)
@@ -448,6 +453,7 @@ int SyntacticAnalyzer::writeStatement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Write Statement>");
+    parseTree.append("write");
     // --------------------------------------------
 
     if (SYM != SYM_LPAREN)
@@ -490,6 +496,7 @@ int SyntacticAnalyzer::compositeStatement(int level, int tx, Procedure *current)
 {
     // --------------------------------------------
     parseTree.push("<Composite Statement>");
+    parseTree.append("begin");
     // --------------------------------------------
 
     statement(level, tx, current);
@@ -510,6 +517,10 @@ int SyntacticAnalyzer::compositeStatement(int level, int tx, Procedure *current)
     // --------------------------------------------
 
     getSym();
+
+    // --------------------------------------------
+    parseTree.pop();
+    // --------------------------------------------
     return 0;
 }
 
@@ -615,6 +626,11 @@ int SyntacticAnalyzer::condition(int level, int tx, Procedure *current)
                 throw SyntaxException("boolean operator expected", line);
         }
     }
+
+    // --------------------------------------------
+    parseTree.pop();
+    // --------------------------------------------
+
     return 0;
 }
 

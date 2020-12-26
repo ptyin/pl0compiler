@@ -2,19 +2,16 @@ const a=10;
 var b,c;
 
 procedure p;
-    begin
-        call p;
-        c:=b+a
-    end;
-
-procedure q;
-    procedure p;
-        begin
-        end;
-    begin
-        call p;
-        c:=b+a
-    end;
+begin
+    c:=b+a
+end;
 
 begin
+    read(b);
+    while b#0 do
+    begin
+        call p;
+        write(2*c);
+        read(b)
+    end
 end
